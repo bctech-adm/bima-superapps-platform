@@ -19,3 +19,11 @@ Kode produk belum ada; dimulai di Sprint S1 setelah dokumen final disetujui.
 ## Keamanan
 Repo ini publik. Jangan commit secret, data klien, atau konfigurasi produksi. Setiap PR dipindai gitleaks.
 Laporkan masalah keamanan ke tim BCT, bukan lewat issue publik.
+
+## Struktur kode (Sprint S1)
+| Path | Isi |
+|---|---|
+| `packages/rules` | Rule engine harga, PPN/PPh 23, prorata, kuota Free (`pnpm -r test`) |
+| `docs/infra-proposals/` | Usulan ADR untuk repo infra (menunggu GATE 1) |
+
+Prasyarat: Node 24 + `pnpm@12.16.1` (`npm i -g pnpm@12.16.1`), lalu `pnpm install && pnpm -r test`.
