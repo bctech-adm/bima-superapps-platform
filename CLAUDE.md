@@ -1,6 +1,6 @@
 # BCTOne — panduan kerja agent (Claude Code / Hermes)
 
-Baca dulu `docs/BCTONE_FINAL_v2.md`. Dokumen itu sumber kebenaran: PRD, aturan bisnis BR-01..BR-30, arsitektur,
+Baca dulu `docs/BCTONE_FINAL_v2.md`, lalu `docs/BCTONE_v2.1_ADAPTASI_INFRA.md` (v2.1 menimpa v2 untuk infra, billing, orchestrator, domain). Dokumen itu sumber kebenaran: PRD, aturan bisnis BR-01..BR-30, arsitektur,
 kontrak integrasi, dan backlog. Keputusan owner di §0 mengikat; jangan diperdebatkan ulang.
 
 ## Status
