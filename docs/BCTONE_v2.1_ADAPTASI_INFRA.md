@@ -18,7 +18,7 @@
 | F4 | Jalur aksi root dari control-plane hanya lewat **spool job + dispatcher `infra-job`** (ADR 0009). Tidak ada Docker API/SSH/sudo dari aplikasi | Orchestrator BCTOne **tidak dibuat sebagai service terpisah**. Provisioning = tipe job baru di dispatcher (butuh ADR + plan) |
 | F5 | Identitas: Keycloak (realm `platform`, Organization per tenant, klaim `tenant_id`, SSO Odoo `sh_auth_oidc`, ADR 0008/0017). User dibuat lewat job skrip, bukan lewat konsol Keycloak | Lihat keputusan **D-1** |
 | F6 | TLS hanya HTTP-01 per hostname, tanpa wildcard, DNS Hostinger dikelola manual (ADR 0002). Record DNS wildcard `*.erp` sudah ada | Wildcard cert `*.one…` di v2 **dibatalkan**. Setiap host mendapat sertifikat sendiri secara otomatis lewat Traefik |
-| F7 | Ollama sudah berjalan: `qwen2.5:3b`, `llama3.2:3b`, `nomic-embed-text`, `NUM_PARALLEL=1`, `cpus 1.5`, `mem_limit 4g`, di network `9router_default` | Jalur "Tidak izinkan" memakai Ollama ini. Container baru tidak perlu. Tinggal satu pekerjaan: daftarkan provider `ol/*` di 9router (sekarang `GET /v1/models` belum menampilkan `ol/*`) |
+| F7 | Ollama sudah berjalan: `qwen2.5:3b`, `llama3.2:3b`, `nomic-embed-text`, `NUM_PARALLEL=1`, `cpus 1.5`, `mem_limit 4g`, di network `9router_default` | Jalur "Tidak izinkan" memakai Ollama ini. Container baru tidak perlu. Tinggal satu pekerjaan: daftarkan provider `ollama-local/*` di 9router (sekarang `GET /v1/models` belum menampilkan `ollama-local/*`) |
 | F8 | RAM: 16 GB, ±7,4 GB terpakai, ±8,6 GB available. Jumlah `mem_limit` sudah **overcommit** (keputusan owner di ADR 0004). Disk: 46 GB bebas (77%). Image yang bisa dibuang 30 GB + build cache 7,5 GB | Anggaran ±9,5 GB di v2 **tidak muat**. BCTOne hanya menambah komponen ringan (§3). Disk perlu dibersihkan dulu (sudah tercatat sebagai keputusan K4 platform) |
 | F9 | ADR 0018: siklus langganan implementation → warranty → active → past_due (grace 2 bulan) → suspended. Terminate dilakukan manual | Paket self-serve BCTOne (Free/UMKM) butuh **siklus kedua**: aktif → past_due J+3 → suspend J+7 → hapus H+14 (K-13). Butuh **ADR 0019** |
 | F10 | ADR 0015: modul platform masuk `addons/platform` sebagai submodule repo `odoo-addons-athera`. `custom_ai.enabled=False` sampai ada ADR gateway AI | Addon tenant `bct_*` masuk sebagai kategori platform (submodule `bima-superapps-platform/odoo/addons`). ai-gateway BCTOne sekaligus menjadi "ADR gateway AI" yang ditunggu |
@@ -59,7 +59,7 @@ Subdomain `app.` dan `admin.` dari v2 **digabung ke `cp.`** supaya jumlah host d
 | `odoo-pool-a` (ada) | DB tenant `<slug>_prod` + addon `bct_*` | 0 (naik nanti bila diperlukan, butuh persetujuan) | Template DB per pack F&B/Retail |
 | Postgres (ada) | DB tenant | 0 | `max_connections` dan `CONNECTION LIMIT` per tenant dihitung di plan |
 | Ollama (ada) | Jalur deny | 0 | Model 3B |
-| 9router (ada) | Tambah provider `ol/*` + key allow/deny | 0 | Konfigurasi 9router |
+| 9router (ada) | Tambah provider `ollama-local/*` + key allow/deny | 0 | Konfigurasi 9router |
 | **Baru:** `bctone-web` | Next.js: marketing `one.` + engine web profil `<slug>.one.` | 256 MiB | Satu container untuk dua fungsi |
 | **Baru:** `bctone-api` | NestJS BFF untuk app (identitas pelanggan, scan brand, poin) | 320 MiB | |
 | **Baru:** `bctone-ai-gw` | Consent, kuota 3/hari, masking, routing ke 9router | 128 MiB | |
@@ -72,11 +72,11 @@ Subdomain `app.` dan `admin.` dari v2 **digabung ke `cp.`** supaya jumlah host d
 | Epic | Perubahan | Hari |
 |---|---|---|
 | E0 Fondasi repo | Tetap. Repo `bima-superapps-platform` berisi `apps/*`, `services/*`, `odoo/addons/bct_*`. Perubahan control-plane dikerjakan di repo `control-plane` | 4 |
-| E1 Infra | Menyusut: ADR 0019 (siklus self-serve) + plan BCTOne, DNS `*.one`, route Traefik per host, provider `ol/*` di 9router, bersih disk | 3 |
+| E1 Infra | Menyusut: ADR 0019 (siklus self-serve) + plan BCTOne, DNS `*.one`, route Traefik per host, provider `ollama-local/*` di 9router, bersih disk | 3 |
 | E2 Billing | Menyusut: plan, subscription, invoice, dan konfirmasi manual sudah ada. Tambah kuota (`plan_quota`), PPN/PPh23, siklus H+14 | 5 |
 | E3 Orchestrator | Menjadi tipe job baru di `infra-job`: `bctone_tenant_provision` (DB dari template + konfigurasi), `tenant_purge`. Lewat dispatcher dengan argumen tervalidasi | 6 |
 | E4 Tenant agent | Tetap (addon `bct_tenant_agent` → endpoint usage control-plane) | 4 |
-| E5 AI gateway | Tetap, ditambah 9router `ol/*` | 3 |
+| E5 AI gateway | Tetap, ditambah 9router `ollama-local/*` | 3 |
 | E6 + E7 Console + BCT Admin | Menyusut: halaman client/subscription/invoice/users sudah ada. Tambah wizard + kalkulator, consent, kuota, waitlist, form user/role (D-1 A) | 8 |
 | E8 App BCTOne | Tetap | 8 |
 | E9 Web & bantuan | Tetap (`bctone-web`) | 3 |
@@ -90,4 +90,4 @@ Urutan sprint tetap 2-mingguan. **Siap publish ±12 minggu** dihitung dari GATE 
 
 1. Tulis ADR 0019 + `docs/plans/bctone-phase-1.md` di `/opt/infra` (proses GATE 1). Isinya: kapasitas, DNS, job baru, siklus self-serve.
 2. Owner menjawab D-1, D-2, D-3 dan menyetujui GATE 1.
-3. Sprint S1: kerangka monorepo + CI di repo ini, bersih disk SRV-1, provider `ol/*` di 9router, DNS `*.one`.
+3. Sprint S1: kerangka monorepo + CI di repo ini, bersih disk SRV-1, provider `ollama-local/*` di 9router, DNS `*.one`.

@@ -88,7 +88,7 @@ Target 90 hari setelah launch: 30–40 tenant, ≥10% di antaranya berbayar, tin
 
 **Consent AI**
 - **BR-05** Consent wajib dipilih eksplisit, tanpa nilai default.
-- **BR-06** Izinkan → `cc/claude-*`, dengan nama/HP/NIK dimasking. Tidak izinkan → `ol/*` (Ollama 3B, 1 vCPU, 1 request). Uji wajib: key deny yang memanggil model selain `ol/*` harus ditolak.
+- **BR-06** Izinkan → `cc/claude-*`, dengan nama/HP/NIK dimasking. Tidak izinkan → `ollama-local/*` (Ollama 3B, 1 vCPU, 1 request). Uji wajib: key deny yang memanggil model selain `ollama-local/*` harus ditolak.
 - **BR-07** Log consent bersifat append-only dengan hash-chain, disimpan 5 tahun [A].
 
 **Kuota Free**
@@ -230,7 +230,7 @@ Tenant (client)        = 1 DB Odoo  <slug>.erp.one.bimacreative.tech
 | Tenant agent → control plane | `POST /bct/usage/v1/daily`, `GET /bct/usage/v1/limits` | HMAC (ts, nonce, sha256 body), toleransi ±300 detik. Idempoten per (tenant, tanggal, seq). Hanya lewat network internal |
 | api → ai-gateway | `POST /v1/chat` | Service key. Cek consent (cache 60 detik), kuota Redis, masking PII |
 | ai-gateway → 9router, jalur izinkan | `POST /v1/messages` (Anthropic) | Key `K_ALLOW`, model `cc/claude-*` |
-| ai-gateway → 9router, jalur tolak | `POST /v1/chat/completions` | Key `K_DENY` dengan allowlist `ol/*` saja. **Tidak ada fallback ke Claude.** Timeout 15 detik → job async atau template |
+| ai-gateway → 9router, jalur tolak | `POST /v1/chat/completions` | Key `K_DENY` dengan allowlist `ollama-local/*` saja (key 9router `access.restricted`). **Tidak ada fallback ke Claude.** Timeout 15 detik → job async atau template |
 | Control plane ↔ orchestrator | `POST /v1/jobs` dan `POST /bct/orchestrator/v1/events` | HMAC. `job_id` sebagai kunci idempoten |
 | api → Odoo tenant | `/json/2/<model>/<method>` | Bot key per tenant + `X-Odoo-Database` |
 
